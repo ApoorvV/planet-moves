@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Planetary Movements Simulation</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            background-color: #000;
+            display: block;
+            margin: 0 auto;
+            border: 1px solid #fff;
+        }
+        #controls {
+            text-align: center;
+            margin-top: 10px;
+        }
+        label, input, button {
+            margin: 0 5px;
+            color: #fff;
+        }
+        input, button {
+            background-color: #333;
+            border: 1px solid #fff;
+            color: #fff;
+            padding: 5px;
+        }
+        input[type="number"] {
+            width: 60px;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="simulationCanvas" width="800" height="600"></canvas>
+
+<div id="controls">
+    <label for="mass">Mass:</label>
+    <input type="number" id="mass" value="10" min="1" max="100">
+    <label for="velocity">Initial Velocity:</label>
+    <input type="number" id="velocity" value="2" min="0" max="10" step="0.1">
+    <button id="addPlanet">Add Planet</button>
+</div>
+
+<script>
+    // Get canvas and context
+    const canvas = document.getElementById('simulationCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Constants
+    const G = 0.1; // Gravitational constant
+    const star = { x: canvas.width / 2, y: canvas.height / 2, mass: 1000 };
+
+    // Planet array
+    let planets = [];
+
+    // Planet constructor
+    class Planet {
+        constructor(x, y, mass, velocityX, velocityY) {
+            this.x = x;
+            this.y = y;
+            this.mass = mass;
+            this.vx = velocityX;
+            this.vy = velocityY;
+        }
+
+        // Update planet position
+        update() {
+            const dx = star.x - this.x;
+            const dy = star.y - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const force = (G * star.mass * this.mass) / (dist * dist);
+            const ax = (force * dx) / (dist * this.mass);
+            const ay = (force * dy) / (dist * this.mass);
+
+            this.vx += ax;
+            this.vy += ay;
+            this.x += this.vx;
+            this.y += this.vy;
+        }
+
+        // Draw planet
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.mass / 5, 0, Math.PI * 2);
+            ctx.fillStyle = '#00f';
+            ctx.fill();
+        }
+    }
+
+    // Draw star
+    function drawStar() {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, 20, 0, Math.PI * 2);
+        ctx.fillStyle = '#ff0';
+        ctx.fill();
+    }
+
+    // Animation loop
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawStar();
+
+        planets.forEach(planet => {
+            planet.update();
+            planet.draw();
+        });
+
+        requestAnimationFrame(animate);
+    }
+
+    // Add event listener to the button
+    document.getElementById('addPlanet').addEventListener('click', () => {
+        const mass = parseFloat(document.getElementById('mass').value);
+        const velocity = parseFloat(document.getElementById('velocity').value);
+
+        // Place the planet at a random position near the edge
+        const angle = Math.random() * Math.PI * 2;
+        const x = star.x + Math.cos(angle) * 200;
+        const y = star.y + Math.sin(angle) * 200;
+
+        // Calculate velocity components perpendicular to the radius
+        const vx = -Math.sin(angle) * velocity;
+        const vy = Math.cos(angle) * velocity;
+
+        const planet = new Planet(x, y, mass, vx, vy);
+        planets.push(planet);
+    });
+
+    // Start animation
+    animate();
+</script>
+
+</body>
+</html>
